@@ -11,6 +11,7 @@ class FTP2(Job):
     def __init__(self, ftphost):
         Job.__init__(self)
         self.remotehost = ftphost
+        self.logged_in = False
         self.log.debug("Opened FTP connection to "+ftphost)
 
     def configure(self):
@@ -21,18 +22,24 @@ class FTP2(Job):
         self.logged_in = True
 
     def retrlines(self, filename, callback):
+        self.check()
         callback("Got the contents of " + filename + "\n")
 
     def close(self):
         self.log.debug("FTP session is closed.")
 
     def cwd(self, newdir):
-# TODO bail out if not logged in
+        self.check()
         self.log.debug("Changed remote dir to "+newdir)
 
     def nlst(self, dir='.'):
+        self.check()
         self.log.debug("Created a dir listing  of a remote dir "+dir)
         return "\n".join('%dZ.txt' % hour for hour in range(13))
+
+    def check(self):
+        if not self.logged_in:
+            raise Exception(" Not logged in")
 
 class NoaaCycle:
     @staticmethod
@@ -45,7 +52,7 @@ class NoaaCycle:
     def current_file():
         """Get the name of the current cycle file as defined by
         http://weather.noaa.gov/weather/metar.shtml
-        The name of a current file is [<UTC hour> - 1]Z.TXT
+        The name of a current file is {<UTC hour>-1}Z.TXT
         """
         hour = (23 + int(datetime.utcnow().strftime("%H")))%24;
         return "%dZ.TXT" % hour
@@ -57,20 +64,20 @@ class NoaaJob(Job):
         Job.start(self)
 
     def action(self):
-        self.log.debug("Downloading from URL: "+self.remote_dir)
+        file = NoaaCycle.current_file()
+        local_dir = self.download_dir + '/' + NoaaCycle.current_date()
         # a mock-up client for a while
         session = FTP2(self.ftp_host)
         self.log.info("Connected to %s" % self.ftp_host)
+        self.log.info("Downloading %s/%s" % (self.remote_dir, file))
         try:
             session.login() 
             session.cwd(self.remote_dir)
-            # download the current file:
-            local_dir = self.download_dir + '/' + NoaaCycle.current_date()
-            file      = NoaaCycle.current_file()
             self.download(session, local_dir, file)
-            session.close()
-        except Exception as e:
+        except Exception, e:
             self.log.error("%s" % e)
+        finally:
+            session.close()
 
     def download_all(self, session, file):
         # read the filelist
@@ -82,7 +89,6 @@ class NoaaJob(Job):
 
     def download(self, session, local_dir, file):
         local_file = local_dir + '/' + file
-        self.log.debug("Downloading %s " % (file,))
         if not os.access(local_dir,os.F_OK):
             os.mkdir(local_dir)
         # 2do check if the file already exists
@@ -91,7 +97,7 @@ class NoaaJob(Job):
         self.log.info("Downloaded %s: %s" % (local_file, file_size))
 
     def configure(self):
-        Job.configure(self, 'conf/noaajob.conf')
+        Job.configure(self, 'src/conf/noaajob.conf')
         self.remote_dir = self.config.get("noaajob", "remote_dir")
         self.download_dir = self.config.get("noaajob", "download_dir")
         self.ftp_host = self.config.get("noaajob", "ftp_host")

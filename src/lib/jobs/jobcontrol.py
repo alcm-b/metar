@@ -31,7 +31,7 @@ class Job(Configurable, Reportable):
         self.log.info('Started')
         try:
             self.action()
-        except Exception as e:
+        except Exception, e:
             self.log.error("%s" % e)
          #self.report()
 
