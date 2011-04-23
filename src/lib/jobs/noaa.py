@@ -55,7 +55,10 @@ class NoaaCycle:
         The name of a current file is {<UTC hour>-1}Z.TXT
         """
         hour = (23 + int(datetime.utcnow().strftime("%H")))%24;
-        return "%dZ.TXT" % hour
+        if hour < 10:
+            return "0%dZ.TXT" % hour
+        else:
+            return "%dZ.TXT" % hour
 
 class NoaaJob(Job):
     """ Get actual data from NOAA METAR cycle files
@@ -92,12 +95,12 @@ class NoaaJob(Job):
         if not os.access(local_dir,os.F_OK):
             os.mkdir(local_dir)
         # 2do check if the file already exists
-        session.retrlines('RETR '+file, open(local_file, 'wb').write)
+        session.retrlines('RETR ' + file, open(local_file, 'wb').write)
         file_size = "%dB" % (os.stat(local_file).st_size,)
         self.log.info("Downloaded %s: %s" % (local_file, file_size))
 
     def configure(self):
-        Job.configure(self, 'src/conf/noaajob.conf')
+        Job.configure(self, 'conf/noaajob.conf')
         self.remote_dir = self.config.get("noaajob", "remote_dir")
         self.download_dir = self.config.get("noaajob", "download_dir")
         self.ftp_host = self.config.get("noaajob", "ftp_host")
