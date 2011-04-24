@@ -46,7 +46,11 @@ class NoaaCycle:
     def current_date():
         """Get a date string for the current cycle
         """
-        return datetime.utcnow().strftime("%Y-%m-%d");
+        current_date = datetime.utcnow() 
+        if(current_date.hour == 23):
+            # 23Z.txt belongs to previous day
+            current_date = datetime.utcnow() - timedelta(1)
+        return current_date.strftime("%Y-%m-%d");
 
     @staticmethod
     def current_file():
@@ -70,7 +74,7 @@ class NoaaJob(Job):
         file = NoaaCycle.current_file()
         local_dir = self.download_dir + '/' + NoaaCycle.current_date()
         # a mock-up client for a while
-        session = FTP2(self.ftp_host)
+        session = FTP(self.ftp_host)
         self.log.info("Connected to %s" % self.ftp_host)
         self.log.info("Downloading %s/%s" % (self.remote_dir, file))
         try:
@@ -79,8 +83,7 @@ class NoaaJob(Job):
             self.download(session, local_dir, file)
         except Exception, e:
             self.log.error("%s" % e)
-        finally:
-            session.close()
+        session.close()
 
     def download_all(self, session, file):
         # read the filelist
