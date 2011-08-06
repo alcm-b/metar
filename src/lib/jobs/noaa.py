@@ -21,7 +21,7 @@ class FTP2(Job):
         self.log.debug("Logged in.")
         self.logged_in = True
 
-    def retrlines(self, filename, callback):
+    def retrbinary(self, filename, callback):
         self.check()
         callback("Got the contents of " + filename + "\n")
 
@@ -47,10 +47,24 @@ class NoaaCycle:
         """Get a date string for the current cycle
         """
         current_date = datetime.utcnow() 
-        if(current_date.hour == 23):
+        if(current_date.hour == 24):
             # 23Z.txt belongs to previous day
-            current_date = datetime.utcnow() - timedelta(1)
-        return current_date.strftime("%Y-%m-%d");
+            current_date = datetime.utcnow() - datetime.timedelta(1)
+        return current_date.strftime("%Y-%m-%d")
+
+    @staticmethod
+    def current_date24():
+        """Get a date string for the current cycle -- a version for Python 2.4
+        """
+        current_date = datetime.utcnow() 
+        # 2do also decrement when last day of the month, last month of the year
+        datestr = current_date.strftime("%Y-%m");
+        day = current_date.day()
+        if(current_date.hour == 24):
+            # 23Z.txt belongs to previous day
+            day = (current_date.day() - 1)
+        datestr = datestr + "-%02d" % day
+        return datestr
 
     @staticmethod
     def current_file():
@@ -74,7 +88,7 @@ class NoaaJob(Job):
         file = NoaaCycle.current_file()
         local_dir = self.download_dir + '/' + NoaaCycle.current_date()
         # a mock-up client for a while
-        session = FTP(self.ftp_host)
+        session = FTP2(self.ftp_host)
         self.log.info("Connected to %s" % self.ftp_host)
         self.log.info("Downloading %s/%s" % (self.remote_dir, file))
         try:
@@ -84,6 +98,8 @@ class NoaaJob(Job):
         except Exception, e:
             self.log.error("%s" % e)
         session.close()
+        self.addReport("Downloaded", local_dir + "/" + file)
+        self.addReport("status", "complete")
 
     def download_all(self, session, file):
         # read the filelist
@@ -98,7 +114,7 @@ class NoaaJob(Job):
         if not os.access(local_dir,os.F_OK):
             os.mkdir(local_dir)
         # 2do check if the file already exists
-        session.retrlines('RETR ' + file, open(local_file, 'wb').write)
+        session.retrbinary('RETR ' + file, open(local_file, 'wb').write)
         file_size = "%dB" % (os.stat(local_file).st_size,)
         self.log.info("Downloaded %s: %s" % (local_file, file_size))
 
@@ -114,3 +130,5 @@ class NoaaJob(Job):
 if __name__ == "__main__":
     job = NoaaJob()
     job.start()
+    job.report()
+# 2do get results, call the next job in queue (upload to database)
