@@ -46,3 +46,13 @@ class Job(Configurable, Reportable):
         Configurable.__init__(self)
         Logger.initialize("metarloader")
         self.log = logging.getLogger("metarloader")
+
+# start a sequence of jobs, run them one after another
+class JobSequence:
+    def addJob(self):
+        pass
+    def start(self):
+        pass
+    def __init__(self):
+        Job.__init(self)
+
