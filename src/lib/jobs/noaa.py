@@ -58,7 +58,7 @@ class NoaaCycle:
         """
         current_date = datetime.utcnow() 
         # 2do also decrement when last day of the month, last month of the year
-        datestr = current_date.strftime("%Y-%m");
+        datestr = current_date.strftime("%Y-%m")
         day = current_date.day()
         if(current_date.hour == 24):
             # 23Z.txt belongs to previous day
@@ -72,7 +72,7 @@ class NoaaCycle:
         http://weather.noaa.gov/weather/metar.shtml
         The name of a current file is {<UTC hour>-1}Z.TXT
         """
-        hour = (23 + int(datetime.utcnow().strftime("%H")))%24;
+        hour = (23 + int(datetime.utcnow().strftime("%H")))%24
         if hour < 10:
             return "0%dZ.TXT" % hour
         else:
@@ -86,7 +86,7 @@ class NoaaJob(Job):
 
     def action(self):
         file = NoaaCycle.current_file()
-        local_dir = self.download_dir + '/' + NoaaCycle.current_date()
+        local_dir = self.download_dir + '/' + NoaaCycle.current_date24()
         # a mock-up client for a while
         session = FTP2(self.ftp_host)
         self.log.info("Connected to %s" % self.ftp_host)
@@ -120,9 +120,9 @@ class NoaaJob(Job):
 
     def configure(self):
         Job.configure(self, 'conf/noaajob.conf')
-        self.remote_dir = self.config.get("noaajob", "remote_dir")
+        self.remote_dir   = self.config.get("noaajob", "remote_dir")
         self.download_dir = self.config.get("noaajob", "download_dir")
-        self.ftp_host = self.config.get("noaajob", "ftp_host")
+        self.ftp_host     = self.config.get("noaajob", "ftp_host")
         
     def __init__(self, code=None):
         Job.__init__(self)
