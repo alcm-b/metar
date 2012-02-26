@@ -1,8 +1,10 @@
 #!/bin/sh
-#set -e
+set -e
 export PYTHONPATH=.:/usr/local/lib/python:src/lib
 
-clear
-# python ./src/cycle.py
-python ./src/lib/jobs/noaa.py
+# clear
+make clean
+echo
+python ./src/lib/noaacrawl.py
+echo
 tail -n 22 -v ./metarloader.log

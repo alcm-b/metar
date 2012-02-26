@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import logging
-from datetime import datetime
 import ConfigParser
 from reporting.logger import Logger
 
@@ -31,7 +30,7 @@ class Job(Configurable, Reportable):
         self.log.info('Started')
         try:
             self.action()
-        except Exception, e:
+        except RuntimeError, e:
             self.log.error("%s" % e)
          #self.report()
 
@@ -46,13 +45,3 @@ class Job(Configurable, Reportable):
         Configurable.__init__(self)
         Logger.initialize("metarloader")
         self.log = logging.getLogger("metarloader")
-
-# start a sequence of jobs, run them one after another
-class JobSequence:
-    def addJob(self):
-        pass
-    def start(self):
-        pass
-    def __init__(self):
-        Job.__init(self)
-
