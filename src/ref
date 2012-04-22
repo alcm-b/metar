@@ -1,6 +1,6 @@
 APPROOT?=..
 NSDSTATIONS=$(APPROOT)/data/stations/nsd_stations.txt
 MYSQL_CMD="mysql -p1 -u root"
-METARDIR=$(APPROOT)/data/noaa/metar
+METARDIR=/srv/weather/data
 REMOTE_METARDIR=public_html/weather/data/metar
 

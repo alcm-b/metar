@@ -23,8 +23,9 @@ db-importstation:
 	$(MYSQL_CMD) -e "SET autocommit=0; SET foreign_key_checks=0; LOAD DATA INFILE '$(STATIONS)' INTO TABLE station; COMMIT; SHOW WARNINGS;SET foreign_key_checks=1;" metar  \
 
 db-importobservation: OBS_DATE=2011-07-04 
-db-importobservation: OBS_DUMP=/opt/alf/metar/test/observation.txt
+db-importobservation: OBS_DUMP=$(APPROOT)/tmp/observation.txt
 db-importobservation:
+	mkdir -p `dirname $(OBS_DUMP)`
 	for i in $(METARDIR)/$(OBS_DATE); do \
 		echo $$i...\
 		&& cat $$i/*.TXT | $(APPROOT)/src/lib/decodemetar.py | sort | uniq > $(OBS_DUMP) \

@@ -1,3 +1,4 @@
+APPROOT=.
 include ./src/ref
 include ./src/Makefile
 include ./ref.local
