@@ -1,4 +1,4 @@
-include ./ref
+-include ./ref
 
 test-dbimport: db-importstation db-importobservation db-stat
 
@@ -27,7 +27,7 @@ db-importobservation: OBS_DUMP=/opt/alf/metar/test/observation.txt
 db-importobservation:
 	for i in $(METARDIR)/$(OBS_DATE); do \
 		echo $$i...\
-		&& cat $$i/*.TXT | ./scratch/cycle2txt.py | sort | uniq > $(OBS_DUMP) \
+		&& cat $$i/*.TXT | $(APPROOT)/src/lib/decodemetar.py | sort | uniq > $(OBS_DUMP) \
 		&& $(MYSQL_CMD) -e "SET autocommit=0; SET foreign_key_checks=0; LOAD DATA INFILE '$(OBS_DUMP)' INTO TABLE observation; COMMIT; SHOW WARNINGS;SET foreign_key_checks=1;" metar  \
 	; done
 		#slow one: --replace 
@@ -36,12 +36,14 @@ download-station:
 	mkdir -p `dirname $(NSDSTATIONS)`
 	wget -O $(NSDSTATIONS) http://weather.noaa.gov/data/nsd_bbsss.txt
 
-remote-mirror:
+noaadump-mirror:
+# download METAR data from remote storage
 	lftp -e "set ssl:verify-certificate no; mirror -v -X *.zip -X *.tar.gz $(REMOTE_METARDIR) $(METARDIR); bye" $(REMOTEFTPHOST)
-remote-updatearchive:
+noaadump-push:
+# put locally stored monthly METAR archives to a remote server (backup)
 	lftp -e "set ssl:verify-certificate no; mirror -R -r --dry-run -v -I *.tar.gz $(METARDIR) $(REMOTE_METARDIR); bye" $(REMOTEFTPHOST)
-remote-cleanup: remote-mirror
-	# delete all directories except those for current month
+noaadump-cleanup: noaadump-mirror
+	# being on remote server, delete all METAR-containing directories except those for current month
 	lftp -e "set ssl:verify-certificate no; cls -1B ${REMOTE_METARDIR}; bye" ${REMOTEFTPHOST} \
 		| perl -ne 'print "$$1-??\n" if /(\d\d\d\d-\d\d)(?:-\d\d\/)/ ; ' \
 		| sort -r | uniq | sed -ne '1d; p' \
