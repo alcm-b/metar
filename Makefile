@@ -4,25 +4,21 @@ include ./ref.local
 include ~/bin/generic.mk
 
 .PHONY: pkg
+DD:=$(shell date +%Y%M%d)
 
-publish-noaadumper	: -pkg
-# upload NOAA METAR dumper to production
-# TODO we no more populate 'pkg' dir, git archive is used instead
-	echo quit | lftp -e "mirror -R pkg metar" -u ${REMOTEFTPHOST}
 clean:
 	TESTDATA=data/noaa/metar/`date +%Y-%m.tar.gz` && test ! -f $$TESTDATA || rm $$TESTDATA 
 test-getsample:
 	curl -s 'http://weather.aero/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&stationString=KSEA,UNNT&hoursBeforeNow=2' | xpath -q -e '//raw_text/text()'
 
-publish: REMOTEHOME=alf@192.168.1.105:/home/alf/export/metar/
-publish: pkg
-	scp delivery/`ls -1t delivery | head -1` $(REMOTEHOME)
-
--pkg:
-# TODO use git archive output
-	cp -R src/* pkg
-	cp bin/run.sh pkg
-	# 2do find a better way to create a clean tree
-	rm -rf pkg/data
-	mkdir -p pkg/data/noaa/metar
-	cp conf/metar.conf pkg/conf/noaajob.conf
+# publish-production: PKG=$(shell delivery/`ls -1t delivery | head -1`)
+publish-production: export REMOTEHOME = metar@localhost:/home/metar/ # TODO test if if works okay
+publish-production: export PKG = $(shell echo `pwd`/delivery/`ls -1t delivery | head -1`)
+publish-production: pkg
+	# export PKG=delivery/`ls -1t delivery | head -1`
+	$(MAKE) --directory env/production -e
+publish-mirror: export PKG = $(shell echo `pwd`/delivery/`ls -1t delivery | head -1`)
+publish-mirror:	export REMOTEFTPHOST = -u metar,metar localhost
+publish-mirror: pkg
+	# export PKG=delivery/`ls -1t delivery | head -1`
+	$(MAKE) --directory env/mirror -e

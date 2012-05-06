@@ -4,4 +4,4 @@ NSDSTATIONS=$(APPROOT)/data/stations/nsd_stations.txt
 MYSQL_CMD=mysql -u root
 METARDIR=/srv/weather/data
 REMOTE_METARDIR=public_html/weather/data/metar
-
+MIRRORAPPHOME=/home/dayzero0/bin/metar 

@@ -1,5 +1,6 @@
 -include ./ref
 
+# ---------------------------------------- production 
 test-dbimport: db-importstation db-importobservation db-stat
 
 db-init:
@@ -24,11 +25,12 @@ download-station:
 db-importstation: STATIONS=$(LOCALHOME)/data/stations/station.txt
 db-importstation:
 	cat $(NSDSTATIONS) | cut -d\; -f 1,2,3,8,9 | perl -pe 's/;//; s/-/./g ; s/\b([0-9.]+)[SW]/-$$1/g; s/(?<=[\d.])[NE]//g' | tr ';' '\t' > $(STATIONS) 
-	$(MYSQL_CMD) -e "SET autocommit=0; SET foreign_key_checks=0; LOAD DATA INFILE '$(STATIONS)' INTO TABLE station; COMMIT; SHOW WARNINGS;SET foreign_key_checks=1;" metar  \
+	$(MYSQL_CMD) -e "SET autocommit=0; SET foreign_key_checks=0; LOAD DATA INFILE '$(STATIONS)' INTO TABLE station; COMMIT; SHOW WARNINGS;SET foreign_key_checks=1;" metar 
 
 db-importobservation: OBS_DATE=2011-07-04 
 db-importobservation: OBS_DUMP=/tmp/observation.txt
 db-importobservation:
+	# TODO add logging
 # OBS_DUMP _should_be_ absolute path - it is LOAD DATA INFILE requirement
 	mkdir -p `dirname $(OBS_DUMP)`
 	for i in $(METARDIR)/$(OBS_DATE); do \
@@ -41,6 +43,7 @@ db-importobservation:
 	; done | tee -a $(APPROOT)/tmp/db-importobservation.log
 #slow one: --replace 
 
+# ---------------------------------------- mirror 
 noaadump-mirror:
 # download METAR data from remote storage
 	lftp -e "set ssl:verify-certificate no; mirror -v -X *.zip -X *.tar.gz $(REMOTE_METARDIR) $(METARDIR); bye" $(REMOTEFTPHOST)
