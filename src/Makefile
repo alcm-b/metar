@@ -1,6 +1,6 @@
 -include ./ref
 
-# ---------------------------------------- production 
+# ---------------------------------------- etl 
 test-dbimport: db-importstation db-importobservation db-stat
 
 db-init:
@@ -43,7 +43,7 @@ db-importobservation:
 	; done | tee -a $(APPROOT)/tmp/db-importobservation.log
 #slow one: --replace 
 
-# ---------------------------------------- mirror 
+# ---------------------------------------- crawler 
 noaadump-mirror:
 # download METAR data from remote storage
 	lftp -e "set ssl:verify-certificate no; mirror -v -X *.zip -X *.tar.gz $(REMOTE_METARDIR) $(METARDIR); bye" $(REMOTEFTPHOST)

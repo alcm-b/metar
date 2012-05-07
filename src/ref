@@ -1,7 +1,9 @@
 APPROOT=..
+# ------------------- crawler
+REMOTE_METARDIR=public_html/weather/data/metar
+MIRRORAPPHOME=/home/dayzero0/bin/metar 
 NSDSTATIONS=${APPROOT}/data/stations/nsd_stations.txt
+# ------------------- etl
 # MYSQL_CMD="mysql -p1 -u root"
 MYSQL_CMD="mysql -u root"
 METARDIR=/srv/weather/data
-REMOTE_METARDIR=public_html/weather/data/metar
-MIRRORAPPHOME=/home/dayzero0/bin/metar 

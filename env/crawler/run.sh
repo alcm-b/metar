@@ -4,4 +4,4 @@ set -e
 . ./ref.local
 export PYTHONPATH=.:/usr/local/lib/python:lib
 cd $MIRRORAPPHOME
-python lib/jobs/noaa.py
+python lib/noaacrawl.py
